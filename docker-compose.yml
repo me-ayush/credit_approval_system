@@ -1,0 +1,38 @@
+version: "3.2"
+services:
+  nodejs:
+    build:
+      context: .
+    image: credit_approval_system
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASS=${MYSQL_PASS}
+      - MYSQL_DB=${MYSQL_DB}
+    volumes:
+      - ./www/:/var/www/html/
+    ports:
+      - "${NODEJS_PORT}:${NODEJS_PORT}"
+    container_name: cas-nodejs-app
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASS}
+      - MYSQL_DATABASE=${MYSQL_DB}
+    container_name: cas-mysql-app
+    ports:
+      - "3306:3306"
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:4.7
+    depends_on:
+      - mysql
+    ports:
+      - "30002:80"
+    environment:
+      - PMA_HOST=cas-mysql-app
+      - PMA_PORT= 3306
+    volumes:
+      - /sessions
+    container_name: cas-phpmyadmin-app
