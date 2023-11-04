@@ -1,8 +1,9 @@
 const express = require('express');
-const router = require('./routes/routes');
-const dataIngestionRouter = require('./routes/insert');
+const dataIngestionRouter = require('./routes/dataIngestionRoutes');
 const { NODEJS_PORT } = require('./Constants/constant');
 const fileUpload = require('express-fileupload');
+const customerRouter = require('./routes/customerRoutes');
+const loanRouter = require('./routes/loanRoutes');
 
 require('dotenv').config();
 const app = express();
@@ -13,9 +14,10 @@ app.use(fileUpload());
 
 app.use(express.json());
 
-app.use('/', router);
+app.use('/', customerRouter);
+app.use('/', loanRouter);
 app.use('/trigger-ingestion', dataIngestionRouter);
 
 app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`);
+    console.log(`App listening at http://localhost:${port}`);
 });

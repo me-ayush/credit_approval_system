@@ -7,18 +7,11 @@ const registerCustomerValidation = [
     body('phone_number').isInt({ min: 0 }).notEmpty(),
 ];
 
-const Customer = {
+const checkEligibilityValidation = [
+    body('customer_id').isInt().notEmpty(),
+    body('loan_amount').isFloat({ min: 0 }).notEmpty(),
+    body('interest_rate').isFloat({ min: 0 }).notEmpty(),
+    body('tenure').isFloat({ min: 0 }).notEmpty(),
+];
 
-    customer_id: null,
-    first_name: '',
-    last_name: '',
-    phone_number: '',
-    age: 0,
-    monthly_salary: 0.0,
-    approved_limit: 0.0,
-    current_debt: 0.0,
-    created_at: null,
-    updated_at: null
-};
-
-module.exports = { Customer, registerCustomerValidation };
+module.exports = { registerCustomerValidation, checkEligibilityValidation };

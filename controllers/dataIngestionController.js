@@ -1,8 +1,6 @@
-const express = require('express');
-const dataIngestionRouter = express.Router();
-const { performDataIngestion } = require('../services/injection');
+const { performDataIngestion } = require('../services/dataIngestionService');
 
-dataIngestionRouter.post('/', async (req, res) => {
+const dataIngestionController = async (req, res) => {
     try {
         const { customerFile, loanFile } = req.files;
 
@@ -17,6 +15,8 @@ dataIngestionRouter.post('/', async (req, res) => {
         console.error('Error during data ingestion:', error);
         res.status(500).json({ error: 'Data ingestion task failed' });
     }
-});
+}
 
-module.exports = dataIngestionRouter;
+module.exports = {
+    dataIngestionController
+}
