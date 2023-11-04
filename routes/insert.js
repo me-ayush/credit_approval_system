@@ -1,25 +1,22 @@
 const express = require('express');
-const insertDataRouter = express.Router();
-const { performIngestion } = require('../services/injection');
+const dataIngestionRouter = express.Router();
+const { performDataIngestion } = require('../services/injection');
 
-
-
-insertDataRouter.post('/', async (req, res) => {
+dataIngestionRouter.post('/', async (req, res) => {
     try {
-        const customersFile = req.files.customer_file;
-        const loansFile = req.files.loan_file;
+        const { customerFile, loanFile } = req.files;
 
-        if (!customersFile || !loansFile) {
-            return res.status(400).json({ error: 'No file uploaded or type not defined' });
+        if (!customerFile || !loanFile) {
+            return res.status(400).json({ error: 'Both customer and loan files are required' });
         }
 
-        await performIngestion([loansFile, customersFile]);
+        await performDataIngestion([loanFile, customerFile]);
 
-        res.json({ message: 'Ingestion task initiated' });
+        res.json({ message: 'Data ingestion task initiated' });
     } catch (error) {
-        console.error('Error during ingestion:', error);
-        res.status(500).json({ error: 'Ingestion task failed' });
+        console.error('Error during data ingestion:', error);
+        res.status(500).json({ error: 'Data ingestion task failed' });
     }
 });
 
-module.exports = insertDataRouter;
+module.exports = dataIngestionRouter;

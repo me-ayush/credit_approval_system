@@ -1,6 +1,5 @@
-
 const xlsx = require('xlsx');
-const { dbQuery, DBconnection } = require('../models/db');
+const { dbQuery } = require('../models/db');
 
 const tableMapping = {
     customer: {
@@ -32,7 +31,7 @@ const tableMapping = {
     },
 };
 
-const performIngestion = async (filesArr) => {
+const performDataIngestion = async (filesArr) => {
 
     try {
         await createTables();
@@ -62,13 +61,12 @@ const performIngestion = async (filesArr) => {
                             const targetDate = new Date(baseDate.getTime() + (numericDate * 24 * 60 * 60 * 1000));
                             return targetDate;
                         } catch (err) {
-                            // console.error(`Error parsing or formatting date: ${err}`);
                             return null;
                         }
                     } else if (column === 'current_debt') {
                         const calculateDebtQuery = `SELECT SUM(loan_amount) AS total_debt FROM loans WHERE tenure > emi_paid and customer_id = ${row['customer_id']} GROUP by customer_id`;
                         try {
-                            const [calculateDebtResult] = await dbQuery(calculateDebtQuery); // Assuming dbQuery is a function that wraps db.query in a promise
+                            const [calculateDebtResult] = await dbQuery(calculateDebtQuery);
                             return calculateDebtResult ? calculateDebtResult.total_debt : null;
                         } catch (calculateDebtErr) {
                             // console.error('Error calculating current_debt:', calculateDebtErr);
@@ -89,13 +87,6 @@ const performIngestion = async (filesArr) => {
             const result = await dbQuery(insertQuery, flattenedValues); // Use your actual database query function.
             console.log(`${result.affectedRows} Data inserted into the database for table ${type}`);
 
-            // db.DBconnection.query(insertQuery, flattenedValues, (err, result) => {
-            //     if (err) {
-            //         console.error('Error inserting data into the database:', err);
-            //     } else {
-            //         console.log(`${result.affectedRows} Data inserted into the database`);
-            //     }
-            // });
         }
         catch (err) {
             console.error(`Error inserting data in table ${type} Error: ${err.message}`);
@@ -104,52 +95,49 @@ const performIngestion = async (filesArr) => {
 }
 
 
-const createTables = () => {
-    return new Promise((resolve, reject) => {
-        const createCustomersTableQuery = `
-            CREATE TABLE IF NOT EXISTS customers (
-                customer_id INT PRIMARY KEY,
-                first_name VARCHAR(50),
-                last_name VARCHAR(50),
-                age INT,
-                phone_number VARCHAR(20),
-                monthly_salary INT,
-                approved_limit INT,
-                current_debt DECIMAL(10, 2) DEFAULT NULL
-            );
-        `;
+const createTables = async () => {
+    const createCustomersTableQuery = `
+        CREATE TABLE IF NOT EXISTS customers (
+            customer_id INT AUTO_INCREMENT PRIMARY KEY,
+            first_name VARCHAR(50),
+            last_name VARCHAR(50),
+            age INT,
+            phone_number VARCHAR(20),
+            monthly_salary INT,
+            approved_limit INT,
+            current_debt DECIMAL(10, 2) DEFAULT NULL
+        );
+    `;
 
-        const createLoansTableQuery = `
-            CREATE TABLE IF NOT EXISTS loans (
-                loan_id INT,
-                customer_id INT,
-                loan_amount DECIMAL(10, 2),
-                tenure INT,
-                interest_rate DECIMAL(5, 2),
-                emi DECIMAL(10, 2),
-                emi_paid INT,
-                start_date DATE,
-                end_date DATE
-            );
-        `;
+    const createLoansTableQuery = `
+        CREATE TABLE IF NOT EXISTS loans (
+            loan_id INT,
+            customer_id INT,
+            loan_amount DECIMAL(10, 2),
+            tenure INT,
+            interest_rate DECIMAL(5, 2),
+            emi DECIMAL(10, 2),
+            emi_paid INT,
+            start_date DATE,
+            end_date DATE
+        );
+    `;
 
-        // Execute the CREATE TABLE queries
-        DBconnection.query(createCustomersTableQuery, (createCustomersErr, createCustomersResult) => {
-            if (createCustomersErr) {
-                reject(createCustomersErr);
-            } else {
-                DBconnection.query(createLoansTableQuery, (createLoansErr, createLoansResult) => {
-                    if (createLoansErr) {
-                        reject(createLoansErr);
-                    } else {
-                        resolve();
-                    }
-                });
-            }
-        });
-    });
+    try {
+        const createCustomersResult = await dbQuery(createCustomersTableQuery);
+        const createLoansResult = await dbQuery(createLoansTableQuery);
+
+        // Check if the results are truthy and print a success message
+        if (createCustomersResult && createLoansResult) {
+            console.log('Tables created successfully');
+        } else {
+            console.error('Error creating tables');
+        }
+    } catch (error) {
+        throw new Error(`Error creating tables: ${error.message}`);
+    }
 };
 
 module.exports = {
-    performIngestion
+    performDataIngestion
 };

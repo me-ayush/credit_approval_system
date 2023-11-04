@@ -1,12 +1,24 @@
 const express = require('express');
+const { registerCustomer } = require('../services/user');
+const { registerCustomerValidation } = require('../models/customer');
+const { validationResult } = require('express-validator');
 const router = express.Router();
 
 router.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
-router.get('/register', (req, res) => {
-    res.send('register');
+router.post('/register', registerCustomerValidation, (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        registerCustomer(req, res);
+    } catch (error) {
+        console.error('Error during registration:', error);
+        res.status(500).json({ error: 'Registration failed' });
+    }
 });
 
 router.get('/check-eligibility', (req, res) => {
