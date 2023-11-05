@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const { checkEligibility } = require('../services/customerService');
-const { processNewLoan, viewLoanDetails, makePayment } = require('../services/loanService');
+const { processNewLoan, viewLoanDetails, makePayment, viewStatement } = require('../services/loanService');
 
 const createLoanController = async (req, res) => {
     const errors = validationResult(req);
@@ -34,11 +34,11 @@ const makeLoanPaymentController = async (req, res) => {
     const { amountPaid } = req.body;
 
     if (!customer_id || isNaN(customer_id) || !loan_id || isNaN(loan_id) || !amountPaid) {
-        return res.status(400).json({ error: "Invalid request. Please provide valid customer_id, loan_id, and amountPaid." });
+        return res.status(400).json({ error: "Invalid request. Please provide valid customer_id, loan_id, and amountPaid" });
     }
 
     if (typeof amountPaid !== 'number' || amountPaid <= 0) {
-        return res.status(400).json({ error: "Invalid amountPaid value. Please provide a positive number." });
+        return res.status(400).json({ error: "Invalid amountPaid value. Please provide a positive number" });
     }
 
     try {
@@ -49,9 +49,25 @@ const makeLoanPaymentController = async (req, res) => {
     }
 };
 
+const viewStatementController = async (req, res) => {
+    const { customer_id, loan_id } = req.params;
+
+    if (!customer_id || isNaN(customer_id) || !loan_id || isNaN(loan_id)) {
+        return res.status(400).json({ error: "Invalid request. Please provide valid customer_id, loan_id" });
+    }
+
+    try {
+        viewStatement(req, res);
+    } catch (error) {
+        console.error('Error making loan payment:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 module.exports = {
     createLoanController,
     viewLoanController,
     makeLoanPaymentController,
+    viewStatementController
 };
 

@@ -90,7 +90,8 @@ const makePayment = async (req, res) => {
     const { customer_id, loan_id } = req.params;
     const { amountPaid } = req.body;
     try {
-        const loanRecord = await getLoanDetailByLoanIdCustomerId(loan_id, customer_id);
+        let loanRecord = await getLoanDetailByLoanIdCustomerId(loan_id, customer_id);
+        loanRecord = loanRecord[0]
         if (!loanRecord) {
             return res.status(404).json("Loan not found");
         }
@@ -100,10 +101,13 @@ const makePayment = async (req, res) => {
         let newEMI = amountPaid;
         if (amountPaid !== loanRecord['emi']) {
             newEMI = recalculateEMI(loanRecord, amountPaid);
+            console.log(newEMI)
             if (newEMI < 0) {
                 return res.status(402).json("EMI is larger than the loan left");
             }
         }
+
+
         const result = await updateLoan(newEMI, loanRecord.emi_paid + 1, loan_id, customer_id);
         console.log(result);
         res.status(200).json({ message: 'Payment successfully processed' });
@@ -114,8 +118,52 @@ const makePayment = async (req, res) => {
     }
 }
 
+const viewStatement = async (req, res) => {
+    let customerId = req.params.customer_id;
+    let loanId = req.params.loan_id;
+    const loanDetails = await getLoanDetailByLoanIdCustomerId(loanId, customerId);
+    if (Object.values(loanDetails) == 0) {
+        return res.status(404).json({ error: "Loan not found." });
+    }
+
+    const statements = [];
+    for (const loan of loanDetails) {
+
+        const {
+            customer_id,
+            loan_id,
+            loan_amount,
+            interest_rate,
+            emi_paid,
+            emi,
+            tenure
+        } = loan;
+
+
+        const principal = loan_amount;
+        const amount_paid = emi_paid * emi;
+        const repayments_left = tenure - emi_paid;
+        const monthly_installment = emi;
+
+        const statementItem = {
+            customer_id,
+            loan_id,
+            principal,
+            interest_rate,
+            amount_paid,
+            monthly_installment,
+            repayments_left
+        };
+
+        statements.push(statementItem);
+    }
+
+    res.status(200).json(statements);
+}
+
 module.exports = {
     processNewLoan,
     viewLoanDetails,
-    makePayment
+    makePayment,
+    viewStatement
 }

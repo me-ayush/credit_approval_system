@@ -27,7 +27,7 @@ const getLoanDetailsByLoanId = async (loan_id) => {
 const getLoanDetailByLoanIdCustomerId = async (loan_id, customer_id) => {
     const query = `SELECT * FROM loans WHERE loan_id = ? and customer_id = ?`;
     const results = await dbQuery(query, [loan_id, customer_id])
-    return results[0]
+    return results
 }
 
 const updateLoan = async (newEMI, emiNumber, loan_id, customer_id) => {
