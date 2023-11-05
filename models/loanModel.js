@@ -30,9 +30,9 @@ const getLoanDetailByLoanIdCustomerId = async (loan_id, customer_id) => {
     return results
 }
 
-const updateLoan = async (newEMI, emiNumber, loan_id, customer_id) => {
-    const query = `UPDATE loans set emi = ?, emi_paid =  ? WHERE loan_id = ? and customer_id = ?`;
-    const results = await dbQuery(query, [newEMI, emiNumber, loan_id, customer_id])
+const updateLoan = async (values) => {
+    const query = `UPDATE loans set loan_amount = ?, tenure = ?, emi = ?, emi_paid =  ? WHERE loan_id = ? and customer_id = ?`;
+    const results = await dbQuery(query, values)
     return results
 }
 const getDebtByCustomerId = async (customer_id) => {

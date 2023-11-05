@@ -99,15 +99,20 @@ const makePayment = async (req, res) => {
             return res.status(402).json("Loan already paid");
         }
         let newEMI = amountPaid;
+        let newAmount = loanRecord['loan_amount'];
+        let newTenure = loanRecord['tenure'];
+        let newEMIPaid = loanRecord['emi_paid'] + 1;
         if (amountPaid !== loanRecord['emi']) {
-            newEMI = recalculateEMI(loanRecord, amountPaid);
+            [newAmount, newTenure, newEMI] = recalculateEMI(loanRecord, amountPaid);
+            newEMIPaid = 0
             if (newEMI < 0) {
                 return res.status(402).json("EMI is larger than the loan left");
             }
         }
 
+        const values = [newAmount, newTenure, newEMI, newEMIPaid, loan_id, customer_id]
 
-        const result = await updateLoan(newEMI, loanRecord.emi_paid + 1, loan_id, customer_id);
+        const result = await updateLoan(values);
         const newDebt = await getDebtByCustomerId(customer_id)
         await updateDebt([newDebt, customer_id])
         res.status(200).json({ message: 'Payment successfully processed' });
