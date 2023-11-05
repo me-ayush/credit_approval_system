@@ -20,7 +20,8 @@ const checkEligibilityController = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        checkEligibility(req, res);
+        const response = await checkEligibility(req);
+        return res.status(response.code).json(response.message);
     } catch (error) {
         console.error('Error checking loan eligibility:', error);
         res.status(500).json({ error: 'Loan eligibility check failed' });

@@ -1,16 +1,8 @@
-const { DBconnection } = require("./db");
+const { dbQuery } = require("./db");
 
-const getUserById = (userId) => {
-    return new Promise((resolve, reject) => {
-        const query = `SELECT * FROM customers WHERE customer_id = ?`;
-
-        DBconnection.query(query, [userId], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results[0]);
-            }
-        });
-    });
+const getUserById = async (userId) => {
+    const query = `SELECT * FROM customers WHERE customer_id = ?`;
+    const results = await dbQuery(query, userId)
+    return results[0]
 };
 module.exports = { getUserById };

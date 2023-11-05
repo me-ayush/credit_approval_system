@@ -7,4 +7,11 @@ const validateLoanData = [
     body('monthly_payment').isFloat({ min: 0 }).notEmpty(),
 ];
 
-module.exports = { validateLoanData };
+const validateProcessLoanData = [
+    body('customer_id').isInt({ min: 0 }).notEmpty(),
+    body('loan_amount').isFloat({ min: 0 }).notEmpty(),
+    body('tenure').isInt({ min: 0 }).notEmpty(),
+    body('interest_rate').isFloat({ min: 0 }).notEmpty(),
+];
+
+module.exports = { validateLoanData, validateProcessLoanData };

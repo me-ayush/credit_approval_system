@@ -1,5 +1,3 @@
-
-
 const calculateCreditScore = (customer_loans) => {
     try {
         // Initialize variables to track credit score components
@@ -40,15 +38,15 @@ const calculateCreditScore = (customer_loans) => {
         let creditScore = 0;
 
         if (paidOnTimeCount > 0) {
-            creditScore += paidOnTimeCount * 5; // Adjust as needed
+            creditScore += paidOnTimeCount * 5;
         }
 
         if (currentYearLoanCount > 0) {
-            creditScore += currentYearLoanCount * 10; // Adjust as needed
+            creditScore += currentYearLoanCount * 10;
         }
 
         if (totalLoansCount > 0) {
-            creditScore += (totalApprovedVolume / totalLoansCount) / 10000; // Adjust as needed
+            creditScore += (totalApprovedVolume / totalLoansCount) / 10000;
         }
 
         if (totalEmiExceedsLimit) {
@@ -63,44 +61,56 @@ const calculateCreditScore = (customer_loans) => {
     }
 };
 
-const determineLoanEligibility = (credit_score, loan_amount, interest_rate, tenure, monthly_salary) => {
+const determineLoanEligibility = (credit_score, loan_amount, interest_rate, tenure, monthly_salary, user_loan) => {
     try {
         // Initialize variables for response
         let approval = false;
         let corrected_interest_rate = null;
+        let currentLoan = 0;
+        let message = '';
 
         // Determine eligibility based on credit score
-        if (credit_score > 50) {
+        if (credit_score >= 50) {
             approval = true;
         } else if (credit_score > 30) {
             if (interest_rate > 12) {
                 approval = true;
             } else {
-                corrected_interest_rate = 12; // Correct the interest rate
+                corrected_interest_rate = 12;
+                approval = true;
             }
         } else if (credit_score > 10) {
             if (interest_rate > 16) {
                 approval = true;
             } else {
-                corrected_interest_rate = 16; // Correct the interest rate
+                approval = true;
+                corrected_interest_rate = 16
             }
+        } else {
+            message = "Credit score is less than 10"
+        }
+
+        user_loan.forEach((loan) => {
+            if (loan.tenure > loan.emi_paid) currentLoan += loan.loan_amount;
+        })
+
+        // Determine whether the loan can be approved based on monthly installment
+        const max_monthly_installment = (0.5 * monthly_salary) / 100;
+        if (currentLoan <= max_monthly_installment) {
+            approval = false;
+            message = "Sum of current emis is grater than your salary"
         }
 
         // Calculate monthly installment
         const monthly_installment = calculateMonthlyInstallment(loan_amount, corrected_interest_rate || interest_rate, tenure);
 
-        // Determine whether the loan can be approved based on monthly installment
-        const max_monthly_installment = (0.5 * monthly_salary) / 100; // Assuming monthly_income is available
-        if (monthly_installment <= max_monthly_installment) {
-            approval = false;
-        }
-
-        // Create the response object
         corrected_interest_rate = corrected_interest_rate ? corrected_interest_rate : interest_rate
+
         return {
             approval,
             corrected_interest_rate,
             monthly_installment,
+            message
         };
 
     } catch (error) {
@@ -109,16 +119,14 @@ const determineLoanEligibility = (credit_score, loan_amount, interest_rate, tenu
     }
 };
 
-const calculateMonthlyInstallment = (principal, annualInterestRate, tenureInMonths) => {
-    // Convert annual interest rate to monthly rate and ensure it's a decimal
+function calculateMonthlyInstallment(principal, annualInterestRate, tenureInMonths) {
     const monthlyInterestRate = (annualInterestRate / 12) / 100;
-
-    // Calculate EMI using the formula
     const emi = (principal * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, tenureInMonths)) /
         (Math.pow(1 + monthlyInterestRate, tenureInMonths) - 1);
 
-    return emi;
-};
+    return parseFloat(emi.toFixed(2));
+}
+
 
 module.exports = {
     calculateCreditScore,

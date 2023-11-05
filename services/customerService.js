@@ -59,37 +59,42 @@ const checkEligibility = async (req, res) => {
         const { customer_id, loan_amount, interest_rate, tenure } = req.body;
 
         const user = await getUserById(customer_id)
+
         if (!user) {
-            return res.status(402).json("User not found");
+            return { code: 402, message: "user not found", nonApprovalMessage: "user not found" }
         }
         const userLoan = await getLoanByCustomerId(customer_id)
 
-
-
         // Calculate the credit score based on the given components
-        const creditScore = await calculateCreditScore(userLoan);
+        const creditScore = calculateCreditScore(userLoan);
 
         // Determine loan eligibility based on the credit score and other criteria
-        const { approval, corrected_interest_rate, monthly_installment } = determineLoanEligibility(
+        const { approval, corrected_interest_rate, monthly_installment, message } = determineLoanEligibility(
             creditScore,
             loan_amount,
             interest_rate,
             tenure,
-            user['monthly_salary']
+            user['monthly_salary'],
+            userLoan
         );
 
         // Prepare the response object
         const response = {
-            customer_id,
-            approval,
-            interest_rate,
-            corrected_interest_rate,
-            tenure,
-            monthly_installment,
+            code: 200,
+            message: {
+                customer_id,
+                approval,
+                interest_rate,
+                corrected_interest_rate,
+                tenure,
+                monthly_installment,
+            },
+            nonApprovalMessage: message
         };
 
+        return response
+
         // Send the response
-        res.status(200).json(response);
     } catch (error) {
         console.error('Error checking loan eligibility:', error.message);
         res.status(500).json({ error: 'Loan eligibility check failed' });

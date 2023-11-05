@@ -5,7 +5,7 @@ const customerRouter = express.Router();
 
 customerRouter.post('/register', registerCustomerValidation, registerCustomerController);
 
-customerRouter.get('/check-eligibility', checkEligibilityValidation, checkEligibilityController);
+customerRouter.post('/check-eligibility', checkEligibilityValidation, checkEligibilityController);
 
 
 module.exports = customerRouter;
