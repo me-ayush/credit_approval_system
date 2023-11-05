@@ -18,4 +18,10 @@ const insertNewLoan = async (values) => {
     return result
 }
 
-module.exports = { getLoanByCustomerId, getMaxLoanId, insertNewLoan };
+const getLoanDetailsByLoanId = async (loan_id) => {
+    const query = `SELECT * FROM loans WHERE loan_id = ?`;
+    const results = await dbQuery(query, loan_id)
+    return results
+}
+
+module.exports = { getLoanByCustomerId, getMaxLoanId, insertNewLoan, getLoanDetailsByLoanId };

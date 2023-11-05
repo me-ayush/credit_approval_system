@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const { checkEligibility } = require('../services/customerService');
-const { processNewLoan } = require('../services/loanService');
+const { processNewLoan, viewLoanDetails } = require('../services/loanService');
 
 const createLoanController = async (req, res) => {
     const errors = validationResult(req);
@@ -25,7 +25,12 @@ const createLoanController = async (req, res) => {
     }
 }
 
+const viewLoanController = async (req, res) => {
+    viewLoanDetails(req, res)
+}
+
 module.exports = {
     createLoanController,
+    viewLoanController,
 };
 
