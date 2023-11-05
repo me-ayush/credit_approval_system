@@ -45,9 +45,7 @@ const performDataIngestion = async (filesArr) => {
         const type = uploadedFile.name.split('_')[0];
 
         try {
-            const workbook = xlsx.read(uploadedFile.data);
-            const sheetName = workbook.SheetNames[0];
-            const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+            const data = uploadedFile.data
 
             const tableInfo = tableMapping[type];
             const tableName = tableInfo.table;
