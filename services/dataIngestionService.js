@@ -1,5 +1,7 @@
 const xlsx = require('xlsx');
 const { dbQuery } = require('../models/db');
+const { createTables } = require('../models/dataIngestion');
+const { getDebtByCustomerId } = require('../models/loanModel');
 
 const tableMapping = {
     customer: {
@@ -64,9 +66,8 @@ const performDataIngestion = async (filesArr) => {
                             return null;
                         }
                     } else if (column === 'current_debt') {
-                        const calculateDebtQuery = `SELECT SUM(loan_amount) AS total_debt FROM loans WHERE tenure > emi_paid and customer_id = ${row['customer_id']} GROUP by customer_id`;
                         try {
-                            const [calculateDebtResult] = await dbQuery(calculateDebtQuery);
+                            const [calculateDebtResult] = await getDebtByCustomerId(row['customer_id'])
                             return calculateDebtResult ? calculateDebtResult.total_debt : null;
                         } catch (calculateDebtErr) {
                             // console.error('Error calculating current_debt:', calculateDebtErr);
@@ -77,7 +78,6 @@ const performDataIngestion = async (filesArr) => {
                     }
                 }));
             }));
-
 
             columns = Object.keys(tableInfo.columns);
             const insertQuery = `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES ${values.map(() => `(${placeholders})`).join(', ')}`;
@@ -93,50 +93,6 @@ const performDataIngestion = async (filesArr) => {
         }
     };
 }
-
-
-const createTables = async () => {
-    const createCustomersTableQuery = `
-        CREATE TABLE IF NOT EXISTS customers (
-            customer_id INT AUTO_INCREMENT PRIMARY KEY,
-            first_name VARCHAR(50),
-            last_name VARCHAR(50),
-            age INT,
-            phone_number VARCHAR(20),
-            monthly_salary INT,
-            approved_limit INT,
-            current_debt DECIMAL(10, 2) DEFAULT NULL
-        );
-    `;
-
-    const createLoansTableQuery = `
-        CREATE TABLE IF NOT EXISTS loans (
-            loan_id INT,
-            customer_id INT,
-            loan_amount DECIMAL(10, 2),
-            tenure INT,
-            interest_rate DECIMAL(5, 2),
-            emi DECIMAL(10, 2),
-            emi_paid INT,
-            start_date DATE,
-            end_date DATE
-        );
-    `;
-
-    try {
-        const createCustomersResult = await dbQuery(createCustomersTableQuery);
-        const createLoansResult = await dbQuery(createLoansTableQuery);
-
-        // Check if the results are truthy and print a success message
-        if (createCustomersResult && createLoansResult) {
-            console.log('Tables created successfully');
-        } else {
-            console.error('Error creating tables');
-        }
-    } catch (error) {
-        throw new Error(`Error creating tables: ${error.message}`);
-    }
-};
 
 module.exports = {
     performDataIngestion

@@ -7,17 +7,11 @@ const dbConfig = {
     user: MYSQL_USER,
     password: MYSQL_PASSWORD,
     database: MYSQL_DATABASE,
-}
-const dbPool = mysql.createPool({
-    host: MYSQL_HOST,
-    user: MYSQL_USER,
-    password: MYSQL_PASSWORD,
-    database: MYSQL_DATABASE,
-})
+};
 
-const DBconnection = mysql.createConnection(dbConfig);
+const dbPool = mysql.createPool(dbConfig);
 
-DBconnection.connect((err) => {
+dbPool.getConnection((err) => {
     if (err) {
         console.error('Error connecting to the database:', err);
     } else {
@@ -27,23 +21,14 @@ DBconnection.connect((err) => {
 
 function dbQuery(query, values) {
     return new Promise((resolve, reject) => {
-        dbPool.getConnection((err, connection) => {
+        dbPool.query(query, values, (err, results) => {
             if (err) {
                 reject(err);
-                return;
+            } else {
+                resolve(results);
             }
-
-            connection.query(query, values, (err, results) => {
-                connection.release(); // Release the connection back to the pool.
-
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(results);
-                }
-            });
         });
     });
 }
 
-module.exports = { DBconnection, dbQuery };
+module.exports = { dbQuery };

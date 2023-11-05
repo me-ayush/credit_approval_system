@@ -35,5 +35,10 @@ const updateLoan = async (newEMI, emiNumber, loan_id, customer_id) => {
     const results = await dbQuery(query, [newEMI, emiNumber, loan_id, customer_id])
     return results
 }
+const getDebtByCustomerId = async (customer_id) => {
+    const query = 'SELECT SUM(loan_amount) AS total_debt FROM loans WHERE tenure > emi_paid and customer_id = ? GROUP by customer_id';
+    const [results] = await dbQuery(query, customer_id)
+    return results.total_debt
 
-module.exports = { getLoanByCustomerId, getMaxLoanId, insertNewLoan, getLoanDetailsByLoanId, getLoanDetailByLoanIdCustomerId, updateLoan };
+}
+module.exports = { getLoanByCustomerId, getMaxLoanId, insertNewLoan, getLoanDetailsByLoanId, getLoanDetailByLoanIdCustomerId, updateLoan, getDebtByCustomerId };

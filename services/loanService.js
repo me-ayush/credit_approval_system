@@ -1,5 +1,5 @@
-const { getUserById } = require("../models/customerModel");
-const { getMaxLoanId, insertNewLoan, getLoanDetailsByLoanId, getLoanDetailByLoanIdCustomerId, updateLoan } = require("../models/loanModel");
+const { getUserById, updateDebt } = require("../models/customerModel");
+const { getMaxLoanId, insertNewLoan, getLoanDetailsByLoanId, getLoanDetailByLoanIdCustomerId, updateLoan, getDebtByCustomerId } = require("../models/loanModel");
 const { recalculateEMI } = require("./creditApprovalService");
 
 const processNewLoan = async (req, res, loanDetails) => {
@@ -101,7 +101,6 @@ const makePayment = async (req, res) => {
         let newEMI = amountPaid;
         if (amountPaid !== loanRecord['emi']) {
             newEMI = recalculateEMI(loanRecord, amountPaid);
-            console.log(newEMI)
             if (newEMI < 0) {
                 return res.status(402).json("EMI is larger than the loan left");
             }
@@ -109,7 +108,8 @@ const makePayment = async (req, res) => {
 
 
         const result = await updateLoan(newEMI, loanRecord.emi_paid + 1, loan_id, customer_id);
-        console.log(result);
+        const newDebt = await getDebtByCustomerId(customer_id)
+        await updateDebt([newDebt, customer_id])
         res.status(200).json({ message: 'Payment successfully processed' });
 
     } catch (error) {
