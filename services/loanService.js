@@ -1,5 +1,6 @@
 const { getUserById } = require("../models/customerModel");
-const { getMaxLoanId, insertNewLoan, getLoanDetailsByLoanId } = require("../models/loanModel");
+const { getMaxLoanId, insertNewLoan, getLoanDetailsByLoanId, getLoanDetailByLoanIdCustomerId, updateLoan } = require("../models/loanModel");
+const { recalculateEMI } = require("./creditApprovalService");
 
 const processNewLoan = async (req, res, loanDetails) => {
     try {
@@ -85,7 +86,36 @@ const viewLoanDetails = async (req, res) => {
     return res.status(200).json(loanDetails)
 }
 
+const makePayment = async (req, res) => {
+    const { customer_id, loan_id } = req.params;
+    const { amountPaid } = req.body;
+    try {
+        const loanRecord = await getLoanDetailByLoanIdCustomerId(loan_id, customer_id);
+        if (!loanRecord) {
+            return res.status(404).json("Loan not found");
+        }
+        if (loanRecord['tenure'] <= loanRecord['emi_paid']) {
+            return res.status(402).json("Loan already paid");
+        }
+        let newEMI = amountPaid;
+        if (amountPaid !== loanRecord['emi']) {
+            newEMI = recalculateEMI(loanRecord, amountPaid);
+            if (newEMI < 0) {
+                return res.status(402).json("EMI is larger than the loan left");
+            }
+        }
+        const result = await updateLoan(newEMI, loanRecord.emi_paid + 1, loan_id, customer_id);
+        console.log(result);
+        res.status(200).json({ message: 'Payment successfully processed' });
+
+    } catch (error) {
+        console.error('Error making payment:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 module.exports = {
     processNewLoan,
-    viewLoanDetails
+    viewLoanDetails,
+    makePayment
 }

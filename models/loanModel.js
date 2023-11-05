@@ -24,4 +24,16 @@ const getLoanDetailsByLoanId = async (loan_id) => {
     return results
 }
 
-module.exports = { getLoanByCustomerId, getMaxLoanId, insertNewLoan, getLoanDetailsByLoanId };
+const getLoanDetailByLoanIdCustomerId = async (loan_id, customer_id) => {
+    const query = `SELECT * FROM loans WHERE loan_id = ? and customer_id = ?`;
+    const results = await dbQuery(query, [loan_id, customer_id])
+    return results[0]
+}
+
+const updateLoan = async (newEMI, emiNumber, loan_id, customer_id) => {
+    const query = `UPDATE loans set emi = ?, emi_paid =  ? WHERE loan_id = ? and customer_id = ?`;
+    const results = await dbQuery(query, [newEMI, emiNumber, loan_id, customer_id])
+    return results
+}
+
+module.exports = { getLoanByCustomerId, getMaxLoanId, insertNewLoan, getLoanDetailsByLoanId, getLoanDetailByLoanIdCustomerId, updateLoan };

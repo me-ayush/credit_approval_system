@@ -127,9 +127,30 @@ function calculateMonthlyInstallment(principal, annualInterestRate, tenureInMont
     return parseFloat(emi.toFixed(2));
 }
 
+const recalculateEMI = (loanDetails, amountPaidToday) => {
+    try {
+        const loanAmount = loanDetails['loan_amount'];
+        const interestRate = loanDetails['interest_rate'] / 100;
+        const tenureInMonths = loanDetails['tenure'];
+        const emi = loanDetails['emi'];
+        const emi_paid = loanDetails['emi_paid'];
+
+        const remainingTenureInMonths = tenureInMonths - emi_paid
+        const totalAmountToBePaid = loanAmount * Math.pow(1 + interestRate, tenureInMonths / 12)
+        const totalAmountPaid = emi * emi_paid
+        const remainingLoanAmount = totalAmountToBePaid - totalAmountPaid - amountPaidToday
+
+        const recalculatedEMI = calculateMonthlyInstallment(remainingLoanAmount, interestRate, remainingTenureInMonths);
+
+        return recalculatedEMI;
+    } catch (error) {
+        throw error;
+    }
+}
 
 module.exports = {
     calculateCreditScore,
     determineLoanEligibility,
-    calculateMonthlyInstallment
+    calculateMonthlyInstallment,
+    recalculateEMI
 };
