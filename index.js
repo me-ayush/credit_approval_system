@@ -7,8 +7,8 @@ const loanRouter = require('./routes/loanRoutes');
 
 require('dotenv').config();
 const app = express();
-// const port = NODEJS_PORT || 3000;
-const port = 8000;
+const port = NODEJS_PORT || 3000;
+// const port = 8000;
 
 app.use(fileUpload());
 
