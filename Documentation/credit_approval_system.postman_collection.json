@@ -1,0 +1,252 @@
+{
+	"info": {
+		"_postman_id": "b99a49ab-3eaa-4139-94ee-34e590e552b2",
+		"name": "credit_approval_system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20382059"
+	},
+	"item": [
+		{
+			"name": "trigger ingestion",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "loanFile",
+							"type": "file",
+							"src": "/D:/Web Development/Intership/Alemeno/loan_data.xlsx"
+						},
+						{
+							"key": "type",
+							"value": "loan",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "customerFile",
+							"type": "file",
+							"src": "/D:/Web Development/Intership/Alemeno/customer_data.xlsx"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/trigger-ingestion",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"trigger-ingestion"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "trigger ingestion Auto",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "loanFile",
+							"type": "file",
+							"src": "/D:/Web Development/Intership/Alemeno/loan_data.xlsx"
+						},
+						{
+							"key": "type",
+							"value": "loan",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "customerFile",
+							"type": "file",
+							"src": "/D:/Web Development/Intership/Alemeno/customer_data.xlsx"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/trigger-ingestion",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"trigger-ingestion"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"first_name\": \"Ayush\",\r\n    \"last_name\": \"Kushwaha\",\r\n    \"age\": 22,\r\n    \"monthly_income\": 50000,\r\n    \"phone_number\" : 999999999999\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/register",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check Eligibility",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"customer_id\": 4,\r\n    \"loan_amount\": 100000,\r\n    \"interest_rate\": 10,\r\n    \"tenure\": 12\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/check-eligibility",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"check-eligibility"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Process New Loan",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"customer_id\": 1,\r\n    \"loan_amount\": 100000,\r\n    \"interest_rate\": 10,\r\n    \"tenure\": 12\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/create-loan",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"create-loan"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "View Loan",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/view-loan/9997",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"view-loan",
+						"9997"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Make Payment",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"amountPaid\":  8791.59\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/make-payment/301/9997",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"make-payment",
+						"301",
+						"9997"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "View Statement",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/view-statement/301/9997",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"view-statement",
+						"301",
+						"9997"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
