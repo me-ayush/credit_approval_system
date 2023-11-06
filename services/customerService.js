@@ -2,6 +2,7 @@ const { getUserById, registerNewCustomer } = require("../models/customerModel");
 const { getLoanByCustomerId } = require("../models/loanModel");
 const { dbQuery } = require("../models/db");
 const { calculateCreditScore, determineLoanEligibility } = require("./creditApprovalService");
+const { getPaymentRecordByCustomerId } = require("../models/paymentsModel");
 
 const registerCustomer = async (req, res) => {
     try {
@@ -64,7 +65,7 @@ const checkEligibility = async (req, res) => {
             interest_rate,
             tenure,
             user['monthly_salary'],
-            userLoan
+            userLoan,
         );
 
         // Prepare the response object

@@ -1,5 +1,6 @@
 const { getUserById, updateDebt } = require("../models/customerModel");
 const { getMaxLoanId, insertNewLoan, getLoanDetailsByLoanId, getLoanDetailByLoanIdCustomerId, updateLoan, getDebtByCustomerId } = require("../models/loanModel");
+const { makeNewPayment, getPaymentRecord, getPaymentRecordSum } = require("../models/paymentsModel");
 const { recalculateEMI } = require("./creditApprovalService");
 
 const processNewLoan = async (req, res, loanDetails) => {
@@ -39,6 +40,8 @@ const processNewLoan = async (req, res, loanDetails) => {
             response.message = "";
             response.monthly_installment = values.emi;
         }
+        const newDebt = values.loan_amount
+        await updateDebt([newDebt, values.customer_id])
 
         res.status(200).json(response);
     } catch (error) {
@@ -90,30 +93,34 @@ const makePayment = async (req, res) => {
     const { customer_id, loan_id } = req.params;
     const { amountPaid } = req.body;
     try {
+        let totalAmountPaid = 0
+
         let loanRecord = await getLoanDetailByLoanIdCustomerId(loan_id, customer_id);
         loanRecord = loanRecord[0]
+        const paymentsRecords = await getPaymentRecord(loan_id, customer_id)
+        paymentsRecords.forEach(row => {
+            totalAmountPaid += row['amount_paid']
+        });
+
         if (!loanRecord) {
             return res.status(404).json("Loan not found");
         }
         if (loanRecord['tenure'] <= loanRecord['emi_paid']) {
             return res.status(402).json("Loan already paid");
         }
-        let newEMI = amountPaid;
-        let newAmount = loanRecord['loan_amount'];
-        let newTenure = loanRecord['tenure'];
-        let newEMIPaid = loanRecord['emi_paid'] + 1;
+        let newEMI = amountPaid
         if (amountPaid !== loanRecord['emi']) {
-            [newAmount, newTenure, newEMI] = recalculateEMI(loanRecord, amountPaid);
-            newEMIPaid = 0
+            newEMI = recalculateEMI(loanRecord, amountPaid, totalAmountPaid);
+
             if (newEMI < 0) {
-                return res.status(402).json("EMI is larger than the loan left");
+                return res.status(402).json("Amount paid is larger than the loan left");
             }
         }
 
-        const values = [newAmount, newTenure, newEMI, newEMIPaid, loan_id, customer_id]
-
-        const result = await updateLoan(values);
-        const newDebt = await getDebtByCustomerId(customer_id)
+        const values = [newEMI, loanRecord['emi_paid'] + 1, loan_id, customer_id]
+        await updateLoan(values);
+        await makeNewPayment(loan_id, customer_id, amountPaid)
+        const newDebt = -amountPaid
         await updateDebt([newDebt, customer_id])
         res.status(200).json({ message: 'Payment successfully processed' });
 
@@ -133,7 +140,6 @@ const viewStatement = async (req, res) => {
 
     const statements = [];
     for (const loan of loanDetails) {
-
         const {
             customer_id,
             loan_id,
@@ -143,10 +149,11 @@ const viewStatement = async (req, res) => {
             emi,
             tenure
         } = loan;
+        const loanAmountPaid = await getPaymentRecordSum(loan_id, customer_id)
 
 
         const principal = loan_amount;
-        const amount_paid = emi_paid * emi;
+        const amount_paid = loanAmountPaid;
         const repayments_left = tenure - emi_paid;
         const monthly_installment = emi;
 

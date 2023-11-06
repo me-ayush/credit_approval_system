@@ -31,14 +31,13 @@ const getLoanDetailByLoanIdCustomerId = async (loan_id, customer_id) => {
 }
 
 const updateLoan = async (values) => {
-    const query = `UPDATE loans set loan_amount = ?, tenure = ?, emi = ?, emi_paid =  ? WHERE loan_id = ? and customer_id = ?`;
+    const query = `UPDATE loans set emi = ?, emi_paid = ? WHERE loan_id = ? and customer_id = ?`;
     const results = await dbQuery(query, values)
     return results
 }
 const getDebtByCustomerId = async (customer_id) => {
-    const query = 'SELECT SUM(loan_amount) AS total_debt FROM loans WHERE tenure > emi_paid and customer_id = ? GROUP by customer_id';
+    const query = 'SELECT SUM((tenure - emi_paid) * emi) AS total_debt FROM loans WHERE tenure > emi_paid and customer_id = ? GROUP by customer_id';
     const [results] = await dbQuery(query, customer_id)
-    return results.total_debt
-
+    return results && results.total_debt ? results.total_debt : 0
 }
 module.exports = { getLoanByCustomerId, getMaxLoanId, insertNewLoan, getLoanDetailsByLoanId, getLoanDetailByLoanIdCustomerId, updateLoan, getDebtByCustomerId };

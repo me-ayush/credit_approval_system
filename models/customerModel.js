@@ -1,5 +1,4 @@
 const { dbQuery } = require("./db");
-const { getDebtByCustomerId } = require("./loanModel");
 
 const getUserById = async (userId) => {
     const query = `SELECT * FROM customers WHERE customer_id = ?`;
@@ -13,8 +12,9 @@ const registerNewCustomer = async (values) => {
 }
 
 const updateDebt = async (values) => {
-    const query = 'update customers set current_debt = ? where customer_id = ?'
-    return await dbQuery(query, values)
+    const query = 'update customers set current_debt = current_debt + ? where customer_id = ?'
+    const results = await dbQuery(query, values)
+    return results
 }
 
 module.exports = { getUserById, registerNewCustomer, updateDebt };

@@ -2,6 +2,7 @@ const xlsx = require('xlsx');
 const { dbQuery } = require('../models/db');
 const { createTables } = require('../models/dataIngestion');
 const { getDebtByCustomerId } = require('../models/loanModel');
+const { insertLoanIntoPayments } = require('../models/paymentsModel');
 
 const tableMapping = {
     customer: {
@@ -65,10 +66,10 @@ const performDataIngestion = async (filesArr) => {
                         }
                     } else if (column === 'current_debt') {
                         try {
-                            const [calculateDebtResult] = await getDebtByCustomerId(row['customer_id'])
-                            return calculateDebtResult ? calculateDebtResult.total_debt : null;
+                            const calculateDebtResult = await getDebtByCustomerId(row['customer_id'])
+                            return calculateDebtResult
                         } catch (calculateDebtErr) {
-                            // console.error('Error calculating current_debt:', calculateDebtErr);
+                            console.error('Error calculating current_debt:', calculateDebtErr.message);
                             return null;
                         }
                     } else {
@@ -90,6 +91,9 @@ const performDataIngestion = async (filesArr) => {
             console.error(`Error inserting data in table ${type} Error: ${err.message}`);
         }
     };
+
+    await insertLoanIntoPayments();
+
 }
 
 module.exports = {

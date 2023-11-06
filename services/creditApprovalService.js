@@ -5,10 +5,14 @@ const calculateCreditScore = (customer_loans) => {
         let totalLoansCount = customer_loans.length; // Total number of loans taken
         let currentYearLoanCount = 0; // Count of loans taken in the current year
         let totalApprovedVolume = 0; // Total approved loan volume
+        let totalEMISum = 0; // Total approved loan volume
+        let totalEMIpaid = 0; // Total approved loan volume
         let totalEmiExceedsLimit = false; // Flag to check if total EMI exceeds the limit
+        let loanTake = false
 
         // Calculate the credit score components
         customer_loans.forEach((loan) => {
+            loanTake = true
             // Component 1: Past Loans paid on time
             if (loan.emi_paid === loan.tenure) {
                 paidOnTimeCount++;
@@ -23,13 +27,14 @@ const calculateCreditScore = (customer_loans) => {
 
             // Component 4: Loan approved volume
             totalApprovedVolume += loan.loan_amount;
+            totalEMISum += loan.emi * (loan.tenure - loan.emi_paid)
 
             // Component 5: Check if sum of current loans' EMI exceeds the limit
             if (totalEmiExceedsLimit) {
                 return; // No need to continue checking if it's already exceeded
             }
 
-            if (loan.emi > loan.approved_limit) {
+            if (loan.emi > loan.approved_limit || totalEMISum > loan.approved_limit) {
                 totalEmiExceedsLimit = true;
             }
         });
@@ -53,6 +58,10 @@ const calculateCreditScore = (customer_loans) => {
             creditScore = 0; // Credit score becomes 0 if EMI exceeds the limit
         }
 
+        if (!loanTake) {
+            creditScore += 50
+        }
+
         return Math.round(creditScore);
 
     } catch (error) {
@@ -61,7 +70,7 @@ const calculateCreditScore = (customer_loans) => {
     }
 };
 
-const determineLoanEligibility = (credit_score, loan_amount, interest_rate, tenure, monthly_salary, user_loan) => {
+const determineLoanEligibility = (credit_score, loan_amount, interest_rate, tenure, monthly_salary, user_loan, userLoanPayments) => {
     try {
         // Initialize variables for response
         let approval = false;
@@ -91,12 +100,13 @@ const determineLoanEligibility = (credit_score, loan_amount, interest_rate, tenu
         }
 
         user_loan.forEach((loan) => {
-            if (loan.tenure > loan.emi_paid) currentLoan += loan.loan_amount;
+            currentLoan += loan.emi * (loan.tenure - loan.emi_paid);
         })
 
+
         // Determine whether the loan can be approved based on monthly installment
-        const max_monthly_installment = (0.5 * monthly_salary) / 100;
-        if (currentLoan <= max_monthly_installment) {
+        const max_monthly_installment = (0.5 * monthly_salary);
+        if (currentLoan >= max_monthly_installment) {
             approval = false;
             message = "Sum of current emis is grater than your salary"
         }
@@ -127,23 +137,23 @@ function calculateMonthlyInstallment(principal, annualInterestRate, tenureInMont
     return parseFloat(emi.toFixed(2));
 }
 
-const recalculateEMI = (loanDetails, amountPaidToday) => {
+const recalculateEMI = (loanDetails, amountPaidToday, totalAmountPaid) => {
     try {
-
         const loanAmount = loanDetails['loan_amount'];
         const interestRate = loanDetails['interest_rate'] / 100;
         const tenureInMonths = loanDetails['tenure'];
-        const emi = loanDetails['emi'];
         const emi_paid = loanDetails['emi_paid'];
 
         const remainingTenureInMonths = tenureInMonths - emi_paid - 1
-        const totalAmountToBePaid = loanAmount * Math.pow(1 + interestRate, tenureInMonths / 12)
-        const totalAmountPaid = emi * emi_paid
+        const monthlyInterestRate = interestRate / 12;
+        const emi = loanAmount * (monthlyInterestRate / (1 - Math.pow(1 + monthlyInterestRate, -tenureInMonths)));
+        const totalAmountToBePaid = emi * tenureInMonths;
         const remainingLoanAmount = totalAmountToBePaid - totalAmountPaid - amountPaidToday
+
 
         const recalculatedEMI = calculateMonthlyInstallment(remainingLoanAmount, interestRate, remainingTenureInMonths);
 
-        return [remainingLoanAmount, remainingTenureInMonths, recalculatedEMI];
+        return recalculatedEMI
     } catch (error) {
         throw error;
     }

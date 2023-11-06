@@ -10,7 +10,7 @@ const createTables = async () => {
         phone_number VARCHAR(20),
         monthly_salary INT,
         approved_limit INT,
-        current_debt DECIMAL(10, 2) DEFAULT NULL
+        current_debt DECIMAL(10, 2) DEFAULT 0
     );
 `;
 
@@ -27,10 +27,23 @@ const createTables = async () => {
         end_date DATE
     );
 `;
+
+    const createPaymentsTableQuery = `
+    CREATE TABLE IF NOT EXISTS payments (
+        payment_id INT AUTO_INCREMENT PRIMARY KEY,
+        loan_id INT,
+        customer_id INT,
+        amount_paid DECIMAL(10, 2),
+        date_paid TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+`
+
+
     const createCustomersResult = await dbQuery(createCustomersTableQuery);
     const createLoansResult = await dbQuery(createLoansTableQuery);
+    const createPaymentsResult = await dbQuery(createPaymentsTableQuery);
 
-    if (createCustomersResult && createLoansResult) {
+    if (createCustomersResult && createLoansResult && createPaymentsResult) {
         console.log('Tables created successfully');
     } else {
         console.error('Error creating tables');
